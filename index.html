@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>周行诗社 - 社团管理系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            color: #333;
+            line-height: 1.6;
+            padding-bottom: 70px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* 顶部标题栏 */
+        .header {
+            background: linear-gradient(to right, #4a6fa5, #6b8cce);
+            color: white;
+            padding: 18px 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        
+        /* 页面内容区域 */
+        .page {
+            display: none;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 底部导航栏 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid #e0e0e0;
+            padding: 10px 0;
+            max-width: 480px;
+            margin: 0 auto;
+            z-index: 100;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+        
+        .nav-item i {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+        
+        .nav-item.active {
+            color: #4a6fa5;
+            background: rgba(74, 111, 165, 0.1);
+        }
+        
+        /* 当前任务页面样式 */
+        .task-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #4a6fa5;
+            transition: transform 0.2s;
+        }
+        
+        .task-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .task-card h3 {
+            color: #4a6fa5;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #777;
+            margin-bottom: 12px;
+        }
+        
+        .task-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-pending {
+            background: #ffebee;
+            color: #f44336;
+        }
+        
+        .status-in-progress {
+            background: #fff8e1;
+            color: #ff9800;
+        }
+        
+        .status-completed {
+            background: #e8f5e9;
+            color: #4caf50;
+        }
+        
+        /* 活动页面样式 */
+        .add-activity-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: #4a6fa5;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 3px 10px rgba(74, 111, 165, 0.3);
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        .activity-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .activity-header {
+            background: linear-gradient(to right, #6b8cce, #8aa7e0);
+            color: white;
+            padding: 15px;
+        }
+        
+        .activity-header h3 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        
+        .activity-details {
+            padding: 15px;
+        }
+        
+        .detail-item {
+            display: flex;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+        
+        .detail-item i {
+            color: #4a6fa5;
+            width: 24px;
+            margin-right: 10px;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #6b8cce, #4a6fa5);
+            border-radius: 4px;
+            width: 65%;
+        }
+        
+        /* 社团中心页面样式 */
+        .profile-section {
+            text-align: center;
+            padding: 20px 0;
+            background: linear-gradient(to bottom, #4a6fa5, #6b8cce);
+            color: white;
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 25px;
+        }
+        
+        .avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            margin: 0 auto 15px;
+            background: #e0e7ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: #4a6fa5;
+        }
+        
+        .profile-info h2 {
+            font-size: 1.4rem;
+            margin-bottom: 5px;
+        }
+        
+        .profile-info p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+        
+        .club-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .option-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 15px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .option-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .option-card i {
+            font-size: 2.2rem;
+            color: #4a6fa5;
+            margin-bottom: 12px;
+        }
+        
+        .option-card h3 {
+            font-size: 1.05rem;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .option-card p {
+            font-size: 0.85rem;
+            color: #777;
+        }
+        
+        .president-only {
+            position: relative;
+            border: 2px solid #ff9800;
+        }
+        
+        .president-only::after {
+            content: "社长专属";
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            background: #ff9800;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 480px) {
+            .header {
+                padding: 15px;
+            }
+            
+            .page {
+                padding: 15px;
+            }
+            
+            .club-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部标题栏 -->
+        <div class="header">
+            <h1>周行诗社活动管理系统</h1>
+        </div>
+        
+        <!-- 当前任务页面 -->
+        <div id="tasks-page" class="page active">
+            <h2 style="margin-bottom: 20px; color: #4a6fa5;">我的任务</h2>
+            
+            <div class="task-card">
+                <h3>设计诗歌朗诵会海报</h3>
+                <div class="task-meta">
+                    <span><i class="far fa-calendar"></i> 截止: 10月15日</span>
+                    <span><i class="fas fa-user-friends"></i> 文宣部</span>
+                </div>
+                <p>为下月诗歌朗诵会设计宣传海报，需包含活动主题和日期</p>
+                <div class="task-status status-in-progress">进行中</div>
+            </div>
+            
+            <div class="task-card">
+                <h3>采购活动用品</h3>
+                <div class="task-meta">
+                    <span><i class="far fa-calendar"></i> 截止: 10月18日</span>
+                    <span><i class="fas fa-user-friends"></i> 秘书部</span>
+                </div>
+                <p>采购活动所需文具、饮用水和奖品</p>
+                <div class="task-status status-pending">待开始</div>
+            </div>
+            
+            <div class="task-card">
+                <h3>撰写活动新闻稿</h3>
+                <div class="task-meta">
+                    <span><i class="far fa-calendar"></i> 截止: 10月25日</span>
+                    <span><i class="fas fa-user-friends"></i> 学术部</span>
+                </div>
+                <p>活动结束后撰写新闻稿并发布到学校网站</p>
+                <div class="task-status status-pending">待开始</div>
+            </div>
+            
+            <div class="task-card">
+                <h3>场地申请审批</h3>
+                <div class="task-meta">
+                    <span><i class="far fa-calendar"></i> 截止: 10月10日</span>
+                    <span><i class="fas fa-user-friends"></i> 秘书部</span>
+                </div>
+                <p>向学校提交场地使用申请并完成审批流程</p>
+                <div class="task-status status-completed">已完成</div>
+            </div>
+        </div>
+        
+        <!-- 目前活动页面 -->
+        <div id="activities-page" class="page">
+            <h2 style="margin-bottom: 20px; color: #4a6fa5;">当前活动</h2>
+            <div class="add-activity-btn">
+                <i class="fas fa-plus"></i>
+            </div>
+            
+            <div class="activity-card">
+                <div class="activity-header">
+                    <h3>秋季诗歌朗诵会</h3>
+                    <p>10月20日 18:30 - 21:00</p>
+                </div>
+                <div class="activity-details">
+                    <div class="detail-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>中心校区大学生活动中心</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-users"></i>
+                        <span>主办：周行诗社 · 协办：校文学社</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-user-tie"></i>
+                        <span>特邀嘉宾：李教授（文学院）</span>
+                    </div>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <p>活动进度：65%</p>
+                </div>
+            </div>
+            
+            <div class="activity-card">
+                <div class="activity-header">
+                    <h3>诗词创作工作坊</h3>
+                    <p>11月5日 14:00 - 16:30</p>
+                </div>
+                <div class="activity-details">
+                    <div class="detail-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>南岭校区图书馆报告厅</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-users"></i>
+                        <span>主办：周行诗社 · 协办：校学生会</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-user-tie"></i>
+                        <span>特邀嘉宾：张诗人（省作协）</span>
+                    </div>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 30%"></div>
+                    </div>
+                    <p>活动进度：30%</p>
+                </div>
+            </div>
+            
+            <div class="activity-card">
+                <div class="activity-header">
+                    <h3>古典诗词鉴赏讲座</h3>
+                    <p>已完成 · 9月15日</p>
+                </div>
+                <div class="activity-details">
+                    <div class="detail-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>前卫校区第三教学楼</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-user-tie"></i>
+                        <span>主讲：王教授（古代文学）</span>
+                    </div>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 100%; background: #4caf50;"></div>
+                    </div>
+                    <p>活动进度：100%</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 社团中心页面 -->
+        <div id="club-page" class="page">
+            <div class="profile-section">
+                <div class="avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="profile-info">
+                    <h2>张明</h2>
+                    <p>社长 · 周行诗社</p>
+                </div>
+            </div>
+            
+            <div class="club-options">
+                <div class="option-card">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <h3>账目表</h3>
+                    <p>查看社团收支与报销记录</p>
+                </div>
+                
+                <div class="option-card">
+                    <i class="fas fa-address-book"></i>
+                    <h3>人员通讯录</h3>
+                    <p>社团成员联系方式</p>
+                </div>
+                
+                <div class="option-card">
+                    <i class="fas fa-boxes"></i>
+                    <h3>资产结余</h3>
+                    <p>社团物品登记与管理</p>
+                </div>
+                
+                <div class="option-card president-only">
+                    <i class="fas fa-user-shield"></i>
+                    <h3>权限管理</h3>
+                    <p>管理员设置与权限分配</p>
+                </div>
+                
+                <div class="option-card president-only">
+                    <i class="fas fa-sitemap"></i>
+                    <h3>部门管理</h3>
+                    <p>添加/编辑社团部门</p>
+                </div>
+                
+                <div class="option-card">
+                    <i class="fas fa-archive"></i>
+                    <h3>文件归档</h3>
+                    <p>活动资料与历史文件</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 底部导航栏 -->
+        <div class="bottom-nav">
+            <div class="nav-item active" data-page="tasks-page">
+                <i class="fas fa-tasks"></i>
+                <span>当前任务</span>
+            </div>
+            <div class="nav-item" data-page="activities-page">
+                <i class="fas fa-calendar-alt"></i>
+                <span>目前活动</span>
+            </div>
+            <div class="nav-item" data-page="club-page">
+                <i class="fas fa-users"></i>
+                <span>社团中心</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面切换功能
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                // 更新导航激活状态
+                document.querySelectorAll('.nav-item').forEach(nav => {
+                    nav.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // 隐藏所有页面
+                document.querySelectorAll('.page').forEach(page => {
+                    page.classList.remove('active');
+                });
+                
+                // 显示目标页面
+                const targetPage = this.getAttribute('data-page');
+                document.getElementById(targetPage).classList.add('active');
+            });
+        });
+        
+        // 添加活动按钮事件
+        document.querySelector('.add-activity-btn').addEventListener('click', function() {
+            alert('添加新活动功能');
+            // 实际应用中这里会打开添加活动的表单
+        });
+        
+        // 模拟社长专属功能提示
+        document.querySelectorAll('.president-only').forEach(item => {
+            item.addEventListener('click', function() {
+                alert('社长专属功能：只有社长可以访问此功能');
+            });
+        });
+        
+        // 模拟其他功能点击
+        document.querySelectorAll('.option-card:not(.president-only)').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('h3').textContent;
+                alert(`打开 ${title} 功能`);
+            });
+        });
+    </script>
+</body>
+</html>
